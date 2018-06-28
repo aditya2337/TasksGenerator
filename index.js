@@ -13,27 +13,36 @@ const currentWeek = `${startOfWeek}-${endOfWeek}`;
 const pathToCreate = `${__dirname}/../${year}/${month}/${currentWeek}`;
 const filePath = `${pathToCreate}/${today}.todo`;
 
+const openFile = (filePathToOpen) => {
+  const openFile = spawn('code', [filePathToOpen]);
+
+  openFile.stdout.on('data', data => {
+    console.log(`stdout: ${data}`);
+  });
+
+  openFile.stderr.on( 'data', data => {
+    console.log(`stderr: ${data}`);
+  });
+
+  openFile.on( 'close', code => {
+    console.log(`Process exited with code ${code}`);
+  });
+}
+
 
 mkdirp(pathToCreate, err => {
   if (err) console.error(err, "Couldn't create Directory");
   else {
-    fs.writeFile(filePath, '', err => {
-      if (err) console.error(err, "Couldn't create File");
+    fs.exists(filePath, exists => {
+      if (exists) openFile(filePath);
       else {
-        const openFile = spawn('code', [filePath]);
-
-        openFile.stdout.on('data', data => {
-          console.log(`stdout: ${data}`);
-        });
-        
-        openFile.stderr.on( 'data', data => {
-          console.log(`stderr: ${data}`);
-        });
-        
-        openFile.on( 'close', code => {
-          console.log(`Process exited with code ${code}`);
-        });
-      };
+        fs.writeFile(filePath, '', err => {
+          if (err) console.error(err, "Couldn't create File");
+          else {
+            openFile(filePath);
+          };
+        })
+      }
     })
   }
 });
